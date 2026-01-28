@@ -57,6 +57,58 @@ cd ..
 wails build -platform windows/amd64
 ```
 
+## Install, run, debug (Windows)
+### 1) Install prerequisites
+* Go 1.22+
+* Node.js 18+ (npm included)
+* Wails CLI:
+  ```powershell
+  go install github.com/wailsapp/wails/v2/cmd/wails@latest
+  ```
+
+### 2) Clone and fetch dependencies
+```powershell
+git clone <YOUR_REPO_URL>
+cd G1STI
+```
+
+### 3) Development mode (UI hot-reload)
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+In another PowerShell:
+```powershell
+cd G1STI
+wails dev
+```
+This runs the Go backend and the Vite dev server together, with live reload for the UI.
+
+### 4) Production build
+```powershell
+./scripts/build_windows.ps1 -Arch amd64
+```
+The output binary will be in `./build/bin/`.
+
+### 5) First run and data folder
+On first run, the app creates:
+```
+%AppData%\G1STI\
+├── data.json
+└── logs\
+    ├── app.log
+    └── singbox.log
+```
+
+### 6) Configure sing-box
+For MVP, place `sing-box.exe` and `wintun.dll` next to `G1STI.exe` (portable layout below). Then set the sing-box path in Settings (UI) once that screen is wired.
+
+### 7) Debugging tips
+* Backend logs: `%AppData%\G1STI\logs\app.log`
+* Sing-box logs: `%AppData%\G1STI\logs\singbox.log`
+* If `wails dev` fails, confirm `npm install` succeeded and `wails` is in PATH.
+
 ### Portable release layout
 ```
 G1STI/
