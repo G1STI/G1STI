@@ -1,0 +1,9 @@
+{
+  "$schema": "https://wails.io/schemas/v2/config.json",
+  "name": "G1STI",
+  "outputfilename": "G1STI",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev": "npm run dev",
+  "frontend:dir": "frontend"
+}

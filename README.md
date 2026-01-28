@@ -43,15 +43,19 @@ See the user story in the task description. Focus is: subscriptions â†’ nodes â†
    ```bash
    go install github.com/wailsapp/wails/v2/cmd/wails@latest
    ```
-3. Install frontend dependencies:
-   ```bash
-   cd frontend
-   npm install
+3. Build with PowerShell:
+   ```powershell
+   ./scripts/build_windows.ps1 -Arch amd64
    ```
-4. Build Windows binary:
-   ```bash
-   wails build -platform windows/amd64
-   ```
+
+### Manual build (PowerShell)
+```powershell
+cd frontend
+npm install
+npm run build
+cd ..
+wails build -platform windows/amd64
+```
 
 ### Portable release layout
 ```
