@@ -12,6 +12,12 @@ const App = () => {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [selectedSubscription, setSelectedSubscription] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [subName, setSubName] = useState("");
+  const [subUrl, setSubUrl] = useState("");
+  const [subAutoUpdate, setSubAutoUpdate] = useState("off");
+  const [vlessTag, setVlessTag] = useState("");
+  const [vlessUri, setVlessUri] = useState("");
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -69,6 +75,72 @@ const App = () => {
 
   const onRefreshIP = async () => {
     await api.refreshPublicIP();
+    const nextStatus = await api.getStatus();
+    if (nextStatus) setStatus(nextStatus);
+  };
+
+  const onSetActiveProfile = async (profileId: string) => {
+    await api.setActiveProfile(profileId);
+    const nextStatus = await api.getStatus();
+    if (nextStatus) setStatus(nextStatus);
+  };
+
+  const onAddSubscription = async () => {
+    setFormError("");
+    if (!subName.trim() || !subUrl.trim()) {
+      setFormError("Name and URL are required.");
+      return;
+    }
+    const created = await api.addSubscription(
+      subName.trim(),
+      subUrl.trim(),
+      subAutoUpdate
+    );
+    if (!created) {
+      setFormError("Failed to add subscription.");
+      return;
+    }
+    setSubName("");
+    setSubUrl("");
+    const updated = await api.listSubscriptions();
+    setSubscriptions(updated);
+    setSelectedSubscription(created.id);
+  };
+
+  const onUpdateSubscription = async () => {
+    if (!selectedSubscription) {
+      setFormError("Select a subscription first.");
+      return;
+    }
+    await api.updateSubscription(selectedSubscription);
+    const list = await api.listNodes(selectedSubscription);
+    setNodes(list);
+    const updated = await api.listSubscriptions();
+    setSubscriptions(updated);
+  };
+
+  const onAddVless = async () => {
+    setFormError("");
+    if (!vlessUri.trim()) {
+      setFormError("VLESS URI is required.");
+      return;
+    }
+    const profile = await api.addVlessUri(vlessTag.trim(), vlessUri.trim());
+    if (!profile) {
+      setFormError("Failed to add VLESS link.");
+      return;
+    }
+    setVlessTag("");
+    setVlessUri("");
+    const [subs, profs] = await Promise.all([
+      api.listSubscriptions(),
+      api.listProfiles(),
+    ]);
+    setSubscriptions(subs);
+    setProfiles(profs);
+    setSelectedSubscription(profile.subscription_id);
+    const list = await api.listNodes(profile.subscription_id);
+    setNodes(list);
     const nextStatus = await api.getStatus();
     if (nextStatus) setStatus(nextStatus);
   };
@@ -131,7 +203,11 @@ const App = () => {
           </div>
           <div className="status__row">
             <label htmlFor="profile">Active profile</label>
-            <select id="profile">
+            <select
+              id="profile"
+              value={status?.active_profile || ""}
+              onChange={(event) => onSetActiveProfile(event.target.value)}
+            >
               {profiles.length === 0 && <option>No profiles</option>}
               {profiles.map((profile) => (
                 <option key={profile.id} value={profile.id}>
@@ -156,8 +232,10 @@ const App = () => {
         <section className="app__card">
           <h2>Subscriptions</h2>
           <div className="toolbar">
-            <button className="primary">Add subscription</button>
-            <button>Update now</button>
+            <button className="primary" onClick={onAddSubscription}>
+              Add subscription
+            </button>
+            <button onClick={onUpdateSubscription}>Update now</button>
             <input
               type="search"
               placeholder="Search nodes"
@@ -165,6 +243,45 @@ const App = () => {
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
+          <div className="toolbar">
+            <input
+              type="text"
+              placeholder="Subscription name"
+              value={subName}
+              onChange={(event) => setSubName(event.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Subscription URL"
+              value={subUrl}
+              onChange={(event) => setSubUrl(event.target.value)}
+            />
+            <select
+              value={subAutoUpdate}
+              onChange={(event) => setSubAutoUpdate(event.target.value)}
+            >
+              <option value="off">Auto-update: off</option>
+              <option value="6h">Auto-update: 6h</option>
+              <option value="12h">Auto-update: 12h</option>
+              <option value="24h">Auto-update: 24h</option>
+            </select>
+          </div>
+          <div className="toolbar">
+            <input
+              type="text"
+              placeholder="VLESS tag (optional)"
+              value={vlessTag}
+              onChange={(event) => setVlessTag(event.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Paste VLESS URI"
+              value={vlessUri}
+              onChange={(event) => setVlessUri(event.target.value)}
+            />
+            <button onClick={onAddVless}>Add VLESS link</button>
+          </div>
+          {formError && <div className="status__error">{formError}</div>}
           <div className="toolbar">
             <label className="muted">Subscription</label>
             <select

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"g1sti/internal/model"
+	"g1sti/internal/parser"
 	"g1sti/internal/paths"
 	"g1sti/internal/singbox"
 	"g1sti/internal/storage"
@@ -16,6 +17,9 @@ import (
 
 var ErrProfileNotFound = errors.New("profile not found")
 var ErrNodeNotFound = errors.New("node not found")
+var ErrInvalidURI = errors.New("invalid uri")
+
+const manualSubscriptionName = "Manual"
 
 type Status struct {
 	Connected     bool   `json:"connected"`
@@ -143,6 +147,63 @@ func (a *App) AddSubscription(name string, url string, autoUpdate string) (model
 	a.data.Subscriptions = append(a.data.Subscriptions, subscription)
 	a.lastSeen = time.Now().UnixMilli()
 	return subscription, a.store.Save(a.data)
+}
+
+func (a *App) AddVlessURI(tag string, uri string) (model.Profile, error) {
+	parsed, err := parser.ParseURI(uri)
+	if err != nil {
+		return model.Profile{}, fmt.Errorf("parse uri: %w", err)
+	}
+	if parsed.Type != "vless" {
+		return model.Profile{}, fmt.Errorf("%w: only vless is supported", ErrInvalidURI)
+	}
+	if tag != "" {
+		parsed.Tag = tag
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	subscription := a.ensureManualSubscription()
+	node := model.Node{
+		ID:             newID(),
+		SubscriptionID: subscription.ID,
+		Tag:            parsed.Tag,
+		Type:           parsed.Type,
+		Server:         parsed.Server,
+		Port:           parsed.Port,
+		Raw:            parsed.Raw,
+		ParsedFields:   parsed.ParsedFields,
+	}
+	a.data.Nodes = append(a.data.Nodes, node)
+
+	now := time.Now().UnixMilli()
+	for i, item := range a.data.Subscriptions {
+		if item.ID == subscription.ID {
+			a.data.Subscriptions[i].NodeCount++
+			a.data.Subscriptions[i].LastUpdated = now
+			break
+		}
+	}
+
+	profile := model.Profile{
+		ID:             newID(),
+		Name:           parsed.Tag,
+		SubscriptionID: subscription.ID,
+		NodeID:         node.ID,
+		TunEnabled:     true,
+		DNSMode:        "system",
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+	a.data.Profiles = append(a.data.Profiles, profile)
+	a.data.ActiveProfile = profile.ID
+	a.lastSeen = now
+
+	if err := a.store.Save(a.data); err != nil {
+		return model.Profile{}, err
+	}
+	return profile, nil
 }
 
 func (a *App) RemoveSubscription(subscriptionID string) error {
@@ -370,4 +431,19 @@ func (a *App) activeProfileNode() (model.Profile, model.Node, error) {
 		}
 	}
 	return profile, model.Node{}, ErrNodeNotFound
+}
+
+func (a *App) ensureManualSubscription() model.Subscription {
+	for _, subscription := range a.data.Subscriptions {
+		if subscription.Name == manualSubscriptionName {
+			return subscription
+		}
+	}
+	subscription := model.Subscription{
+		ID:         newID(),
+		Name:       manualSubscriptionName,
+		AutoUpdate: "off",
+	}
+	a.data.Subscriptions = append(a.data.Subscriptions, subscription)
+	return subscription
 }

@@ -34,7 +34,26 @@ export type Node = {
   port: number;
 };
 
-const backend = window.backend?.App;
+type Backend = {
+  GetStatus?: () => Promise<Status>;
+  ListSubscriptions?: () => Promise<Subscription[]>;
+  ListProfiles?: () => Promise<Profile[]>;
+  ListNodes?: (subscriptionId: string) => Promise<Node[]>;
+  AddSubscription?: (
+    name: string,
+    url: string,
+    autoUpdate: string
+  ) => Promise<Subscription>;
+  UpdateSubscription?: (subscriptionId: string) => Promise<void>;
+  SetActiveProfile?: (profileId: string) => Promise<void>;
+  AddVlessURI?: (tag: string, uri: string) => Promise<Profile>;
+  Connect?: () => Promise<void>;
+  Disconnect?: () => Promise<void>;
+  RefreshPublicIP?: () => Promise<string>;
+};
+
+const backend: Backend | undefined =
+  window.go?.main?.App ?? window.backend?.App;
 
 export const api = {
   getStatus: async (): Promise<Status | null> => {
@@ -52,6 +71,26 @@ export const api = {
   listNodes: async (subscriptionId: string): Promise<Node[]> => {
     if (!backend?.ListNodes) return [];
     return backend.ListNodes(subscriptionId);
+  },
+  addSubscription: async (
+    name: string,
+    url: string,
+    autoUpdate: string
+  ): Promise<Subscription | null> => {
+    if (!backend?.AddSubscription) return null;
+    return backend.AddSubscription(name, url, autoUpdate);
+  },
+  updateSubscription: async (subscriptionId: string): Promise<void> => {
+    if (!backend?.UpdateSubscription) return;
+    return backend.UpdateSubscription(subscriptionId);
+  },
+  setActiveProfile: async (profileId: string): Promise<void> => {
+    if (!backend?.SetActiveProfile) return;
+    return backend.SetActiveProfile(profileId);
+  },
+  addVlessUri: async (tag: string, uri: string): Promise<Profile | null> => {
+    if (!backend?.AddVlessURI) return null;
+    return backend.AddVlessURI(tag, uri);
   },
   connect: async (): Promise<void> => {
     if (!backend?.Connect) return;
