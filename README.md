@@ -16,7 +16,7 @@ Minimal Windows 10/11 desktop client for VLESS (and other subscription URIs) pow
 - [x] Step 2: Subscriptions (download, decode, parse, normalize)
 - [ ] Step 3: UI (Home, Subscriptions, Profiles/Settings, About/Logs) + tray
 - [x] Step 4: Integration tests (vless parsing, sing-box start/stop w/ mock)
-- [ ] Step 5: Windows build instructions + portable release layout
+- [x] Step 5: Windows build instructions + portable release layout
 
 ## Layout
 ```
@@ -63,6 +63,13 @@ G1STI/
 ```
 
 Keep `sing-box.exe` and `wintun.dll` next to the app executable for the MVP. Configure the sing-box path in Settings (UI) once bindings are wired.
+
+### Release checklist (MVP)
+1. Bundle `sing-box.exe` and `wintun.dll` into the portable folder above.
+2. Run the app once to create `%AppData%\G1STI\` storage and logs.
+3. Add a subscription URL and update nodes.
+4. Create a profile, select a node, and connect.
+5. Verify `singbox.log` and `app.log` in `%AppData%\G1STI\logs`.
 
 ## License
 MIT (see `LICENSE`).
