@@ -52,6 +52,22 @@ type Outbound struct {
 	Extra  map[string]interface{} `json:"-"`
 }
 
+func (o Outbound) MarshalJSON() ([]byte, error) {
+	type base Outbound
+	payload := map[string]interface{}{}
+	raw, err := json.Marshal(base(o))
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return nil, err
+	}
+	for key, value := range o.Extra {
+		payload[key] = value
+	}
+	return json.Marshal(payload)
+}
+
 type RouteConfig struct {
 	Rules               []RouteRule `json:"rules"`
 	Final               string      `json:"final"`
@@ -103,12 +119,11 @@ func BuildConfig(profile model.Profile, node model.Node, logPath string) (Config
 		})
 	}
 
-	proxyOutbound := Outbound{
-		Type:   node.Type,
-		Tag:    "proxy",
-		Server: node.Server,
-		Port:   node.Port,
+	proxyOutbound, err := buildOutbound(node)
+	if err != nil {
+		return Config{}, err
 	}
+	proxyOutbound.Tag = "proxy"
 	config.Outbounds = append(config.Outbounds,
 		proxyOutbound,
 		Outbound{Type: "direct", Tag: "direct"},
@@ -116,6 +131,107 @@ func BuildConfig(profile model.Profile, node model.Node, logPath string) (Config
 	)
 
 	return config, nil
+}
+
+func buildOutbound(node model.Node) (Outbound, error) {
+	outbound := Outbound{
+		Type:   node.Type,
+		Server: node.Server,
+		Port:   node.Port,
+		Extra:  map[string]interface{}{},
+	}
+	switch node.Type {
+	case "vless":
+		uuid := node.ParsedFields["uuid"]
+		if uuid == "" {
+			return Outbound{}, fmt.Errorf("vless uuid is empty")
+		}
+		outbound.Extra["uuid"] = uuid
+		if flow := node.ParsedFields["flow"]; flow != "" {
+			outbound.Extra["flow"] = flow
+		}
+		applyTLS(&outbound, node)
+		applyTransport(&outbound, node)
+	case "trojan":
+		password := node.ParsedFields["password"]
+		if password == "" {
+			return Outbound{}, fmt.Errorf("trojan password is empty")
+		}
+		outbound.Extra["password"] = password
+		applyTLS(&outbound, node)
+	case "shadowsocks":
+		method := node.ParsedFields["method"]
+		password := node.ParsedFields["password"]
+		if method == "" || password == "" {
+			return Outbound{}, fmt.Errorf("shadowsocks method/password missing")
+		}
+		outbound.Extra["method"] = method
+		outbound.Extra["password"] = password
+	case "hysteria2":
+		if auth := node.ParsedFields["auth"]; auth != "" {
+			outbound.Extra["auth"] = auth
+		}
+		applyTLS(&outbound, node)
+	case "tuic":
+		uuid := node.ParsedFields["uuid"]
+		password := node.ParsedFields["password"]
+		if uuid == "" || password == "" {
+			return Outbound{}, fmt.Errorf("tuic uuid/password missing")
+		}
+		outbound.Extra["uuid"] = uuid
+		outbound.Extra["password"] = password
+		applyTLS(&outbound, node)
+	}
+	return outbound, nil
+}
+
+func applyTLS(outbound *Outbound, node model.Node) {
+	security := node.ParsedFields["security"]
+	sni := node.ParsedFields["sni"]
+	fp := node.ParsedFields["fp"]
+	pbk := node.ParsedFields["pbk"]
+	sid := node.ParsedFields["sid"]
+
+	if security == "" && sni == "" && fp == "" && pbk == "" {
+		return
+	}
+
+	tls := map[string]interface{}{}
+	if security != "" && security != "none" {
+		tls["enabled"] = true
+	}
+	if sni != "" {
+		tls["server_name"] = sni
+	}
+	if fp != "" {
+		tls["utls"] = map[string]interface{}{
+			"enabled":     true,
+			"fingerprint": fp,
+		}
+	}
+	if security == "reality" || pbk != "" {
+		reality := map[string]interface{}{
+			"enabled": true,
+		}
+		if pbk != "" {
+			reality["public_key"] = pbk
+		}
+		if sid != "" {
+			reality["short_id"] = sid
+		}
+		tls["reality"] = reality
+	}
+	outbound.TLS = tls
+}
+
+func applyTransport(outbound *Outbound, node model.Node) {
+	transport := node.ParsedFields["type"]
+	if transport == "" {
+		return
+	}
+	outbound.Extra["transport"] = map[string]interface{}{
+		"type": transport,
+	}
 }
 
 func WriteConfig(path string, config Config) error {
