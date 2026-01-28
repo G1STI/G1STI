@@ -37,5 +37,32 @@ Minimal Windows 10/11 desktop client for VLESS (and other subscription URIs) pow
 ## MVP scope
 See the user story in the task description. Focus is: subscriptions → nodes → connect with sing-box, tray control, logs.
 
+## Build (Windows, Wails v2)
+1. Install Go 1.22+ and Node.js 18+.
+2. Install Wails CLI:
+   ```bash
+   go install github.com/wailsapp/wails/v2/cmd/wails@latest
+   ```
+3. Install frontend dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+4. Build Windows binary:
+   ```bash
+   wails build -platform windows/amd64
+   ```
+
+### Portable release layout
+```
+G1STI/
+├── G1STI.exe
+├── sing-box.exe
+├── wintun.dll
+└── resources/
+```
+
+Keep `sing-box.exe` and `wintun.dll` next to the app executable for the MVP. Configure the sing-box path in Settings (UI) once bindings are wired.
+
 ## License
 MIT (see `LICENSE`).

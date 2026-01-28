@@ -15,6 +15,14 @@ select {
   font: inherit;
 }
 
+select {
+  background: #0f1115;
+  color: #f4f4f4;
+  border: 1px solid #2a3244;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
 .app {
   max-width: 960px;
   margin: 40px auto;
@@ -80,10 +88,30 @@ select {
   color: #f97316;
 }
 
+.status__value--ok {
+  color: #22c55e;
+}
+
+.status__error {
+  margin-top: 8px;
+  color: #f87171;
+}
+
+.status__actions {
+  display: flex;
+  gap: 12px;
+}
+
 .status__row {
   margin-top: 16px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+
+.status__ip {
+  display: flex;
+  gap: 12px;
   align-items: center;
 }
 
