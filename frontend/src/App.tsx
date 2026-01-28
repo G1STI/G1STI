@@ -17,7 +17,9 @@ const App = () => {
   const [subAutoUpdate, setSubAutoUpdate] = useState("off");
   const [vlessTag, setVlessTag] = useState("");
   const [vlessUri, setVlessUri] = useState("");
-  const [formError, setFormError] = useState("");
+  const [subscriptionError, setSubscriptionError] = useState("");
+  const [vlessError, setVlessError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -62,42 +64,52 @@ const App = () => {
   }, [nodes, search]);
 
   const onConnect = async () => {
+    setBusy(true);
     await api.connect();
     const nextStatus = await api.getStatus();
     if (nextStatus) setStatus(nextStatus);
+    setBusy(false);
   };
 
   const onDisconnect = async () => {
+    setBusy(true);
     await api.disconnect();
     const nextStatus = await api.getStatus();
     if (nextStatus) setStatus(nextStatus);
+    setBusy(false);
   };
 
   const onRefreshIP = async () => {
+    setBusy(true);
     await api.refreshPublicIP();
     const nextStatus = await api.getStatus();
     if (nextStatus) setStatus(nextStatus);
+    setBusy(false);
   };
 
   const onSetActiveProfile = async (profileId: string) => {
+    setBusy(true);
     await api.setActiveProfile(profileId);
     const nextStatus = await api.getStatus();
     if (nextStatus) setStatus(nextStatus);
+    setBusy(false);
   };
 
   const onAddSubscription = async () => {
-    setFormError("");
+    setSubscriptionError("");
     if (!subName.trim() || !subUrl.trim()) {
-      setFormError("Name and URL are required.");
+      setSubscriptionError("Name and URL are required.");
       return;
     }
+    setBusy(true);
     const created = await api.addSubscription(
       subName.trim(),
       subUrl.trim(),
       subAutoUpdate
     );
     if (!created) {
-      setFormError("Failed to add subscription.");
+      setSubscriptionError("Failed to add subscription.");
+      setBusy(false);
       return;
     }
     setSubName("");
@@ -105,29 +117,34 @@ const App = () => {
     const updated = await api.listSubscriptions();
     setSubscriptions(updated);
     setSelectedSubscription(created.id);
+    setBusy(false);
   };
 
   const onUpdateSubscription = async () => {
     if (!selectedSubscription) {
-      setFormError("Select a subscription first.");
+      setSubscriptionError("Select a subscription first.");
       return;
     }
+    setBusy(true);
     await api.updateSubscription(selectedSubscription);
     const list = await api.listNodes(selectedSubscription);
     setNodes(list);
     const updated = await api.listSubscriptions();
     setSubscriptions(updated);
+    setBusy(false);
   };
 
   const onAddVless = async () => {
-    setFormError("");
+    setVlessError("");
     if (!vlessUri.trim()) {
-      setFormError("VLESS URI is required.");
+      setVlessError("VLESS URI is required.");
       return;
     }
+    setBusy(true);
     const profile = await api.addVlessUri(vlessTag.trim(), vlessUri.trim());
     if (!profile) {
-      setFormError("Failed to add VLESS link.");
+      setVlessError("Failed to add VLESS link.");
+      setBusy(false);
       return;
     }
     setVlessTag("");
@@ -143,6 +160,7 @@ const App = () => {
     setNodes(list);
     const nextStatus = await api.getStatus();
     if (nextStatus) setStatus(nextStatus);
+    setBusy(false);
   };
 
   return (
@@ -195,10 +213,12 @@ const App = () => {
               )}
             </div>
             <div className="status__actions">
-              <button className="primary" onClick={onConnect}>
+              <button className="primary" onClick={onConnect} disabled={busy}>
                 Connect
               </button>
-              <button onClick={onDisconnect}>Disconnect</button>
+              <button onClick={onDisconnect} disabled={busy}>
+                Disconnect
+              </button>
             </div>
           </div>
           <div className="status__row">
@@ -222,7 +242,9 @@ const App = () => {
               <span className="muted">
                 {status?.public_ip || "Not checked"}
               </span>
-              <button onClick={onRefreshIP}>Refresh</button>
+              <button onClick={onRefreshIP} disabled={busy}>
+                Refresh
+              </button>
             </div>
           </div>
         </section>
@@ -231,11 +253,67 @@ const App = () => {
       {activeTab === "Subscriptions" && (
         <section className="app__card">
           <h2>Subscriptions</h2>
+          <div className="app__card">
+            <h3>Add subscription</h3>
+            <div className="toolbar">
+              <input
+                type="text"
+                placeholder="Subscription name"
+                value={subName}
+                onChange={(event) => setSubName(event.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Subscription URL"
+                value={subUrl}
+                onChange={(event) => setSubUrl(event.target.value)}
+              />
+              <select
+                value={subAutoUpdate}
+                onChange={(event) => setSubAutoUpdate(event.target.value)}
+              >
+                <option value="off">Auto-update: off</option>
+                <option value="6h">Auto-update: 6h</option>
+                <option value="12h">Auto-update: 12h</option>
+                <option value="24h">Auto-update: 24h</option>
+              </select>
+              <button
+                className="primary"
+                onClick={onAddSubscription}
+                disabled={busy}
+              >
+                Save
+              </button>
+            </div>
+            {subscriptionError && (
+              <div className="status__error">{subscriptionError}</div>
+            )}
+          </div>
+          <div className="app__card">
+            <h3>Add VLESS link</h3>
+            <div className="toolbar">
+              <input
+                type="text"
+                placeholder="VLESS tag (optional)"
+                value={vlessTag}
+                onChange={(event) => setVlessTag(event.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Paste VLESS URI"
+                value={vlessUri}
+                onChange={(event) => setVlessUri(event.target.value)}
+              />
+              <button onClick={onAddVless} disabled={busy}>
+                Import VLESS
+              </button>
+            </div>
+            {vlessError && <div className="status__error">{vlessError}</div>}
+          </div>
           <div className="toolbar">
-            <button className="primary" onClick={onAddSubscription}>
-              Add subscription
+            <button onClick={onUpdateSubscription} disabled={busy}>
+              Update nodes
             </button>
-            <button onClick={onUpdateSubscription}>Update now</button>
             <input
               type="search"
               placeholder="Search nodes"
@@ -243,45 +321,6 @@ const App = () => {
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <div className="toolbar">
-            <input
-              type="text"
-              placeholder="Subscription name"
-              value={subName}
-              onChange={(event) => setSubName(event.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Subscription URL"
-              value={subUrl}
-              onChange={(event) => setSubUrl(event.target.value)}
-            />
-            <select
-              value={subAutoUpdate}
-              onChange={(event) => setSubAutoUpdate(event.target.value)}
-            >
-              <option value="off">Auto-update: off</option>
-              <option value="6h">Auto-update: 6h</option>
-              <option value="12h">Auto-update: 12h</option>
-              <option value="24h">Auto-update: 24h</option>
-            </select>
-          </div>
-          <div className="toolbar">
-            <input
-              type="text"
-              placeholder="VLESS tag (optional)"
-              value={vlessTag}
-              onChange={(event) => setVlessTag(event.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Paste VLESS URI"
-              value={vlessUri}
-              onChange={(event) => setVlessUri(event.target.value)}
-            />
-            <button onClick={onAddVless}>Add VLESS link</button>
-          </div>
-          {formError && <div className="status__error">{formError}</div>}
           <div className="toolbar">
             <label className="muted">Subscription</label>
             <select
