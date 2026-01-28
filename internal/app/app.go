@@ -18,11 +18,11 @@ var ErrProfileNotFound = errors.New("profile not found")
 var ErrNodeNotFound = errors.New("node not found")
 
 type Status struct {
-	Connected     bool      `json:"connected"`
-	ActiveProfile string    `json:"active_profile"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	LastError     string    `json:"last_error"`
-	PublicIP      string    `json:"public_ip"`
+	Connected     bool   `json:"connected"`
+	ActiveProfile string `json:"active_profile"`
+	UpdatedAtMs   int64  `json:"updated_at_ms"`
+	LastError     string `json:"last_error"`
+	PublicIP      string `json:"public_ip"`
 }
 
 type App struct {
@@ -33,7 +33,7 @@ type App struct {
 	manager  *singbox.Manager
 	data     model.AppData
 	lastErr  string
-	lastSeen time.Time
+	lastSeen int64
 	publicIP string
 }
 
@@ -44,7 +44,15 @@ func New() *App {
 	}
 }
 
-func (a *App) Startup(ctx context.Context) error {
+func (a *App) Startup(ctx context.Context) {
+	if err := a.startup(ctx); err != nil {
+		a.mu.Lock()
+		a.lastErr = err.Error()
+		a.mu.Unlock()
+	}
+}
+
+func (a *App) startup(ctx context.Context) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -89,7 +97,7 @@ func (a *App) GetStatus() Status {
 	return Status{
 		Connected:     a.manager != nil && a.manager.IsRunning(),
 		ActiveProfile: a.data.ActiveProfile,
-		UpdatedAt:     a.lastSeen,
+		UpdatedAtMs:   a.lastSeen,
 		LastError:     a.lastErr,
 		PublicIP:      a.publicIP,
 	}
@@ -133,7 +141,7 @@ func (a *App) AddSubscription(name string, url string, autoUpdate string) (model
 		AutoUpdate: autoUpdate,
 	}
 	a.data.Subscriptions = append(a.data.Subscriptions, subscription)
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return subscription, a.store.Save(a.data)
 }
 
@@ -155,7 +163,7 @@ func (a *App) RemoveSubscription(subscriptionID string) error {
 		}
 	}
 	a.data.Nodes = nodes
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return a.store.Save(a.data)
 }
 
@@ -163,10 +171,10 @@ func (a *App) CreateProfile(profile model.Profile) (model.Profile, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	profile.ID = newID()
-	profile.CreatedAt = time.Now()
+	profile.CreatedAt = time.Now().UnixMilli()
 	profile.UpdatedAt = profile.CreatedAt
 	a.data.Profiles = append(a.data.Profiles, profile)
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return profile, a.store.Save(a.data)
 }
 
@@ -176,9 +184,9 @@ func (a *App) UpdateProfile(profile model.Profile) error {
 	for i, item := range a.data.Profiles {
 		if item.ID == profile.ID {
 			profile.CreatedAt = item.CreatedAt
-			profile.UpdatedAt = time.Now()
+			profile.UpdatedAt = time.Now().UnixMilli()
 			a.data.Profiles[i] = profile
-			a.lastSeen = time.Now()
+			a.lastSeen = time.Now().UnixMilli()
 			return a.store.Save(a.data)
 		}
 	}
@@ -198,7 +206,7 @@ func (a *App) DeleteProfile(profileID string) error {
 	if a.data.ActiveProfile == profileID {
 		a.data.ActiveProfile = ""
 	}
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return a.store.Save(a.data)
 }
 
@@ -208,7 +216,7 @@ func (a *App) SetActiveProfile(profileID string) error {
 	for _, profile := range a.data.Profiles {
 		if profile.ID == profileID {
 			a.data.ActiveProfile = profileID
-			a.lastSeen = time.Now()
+			a.lastSeen = time.Now().UnixMilli()
 			return a.store.Save(a.data)
 		}
 	}
@@ -248,12 +256,12 @@ func (a *App) UpdateSubscription(subscriptionID string) error {
 		}
 	}
 	a.data.Nodes = append(filtered, nodes...)
-	target.LastUpdated = time.Now()
+	target.LastUpdated = time.Now().UnixMilli()
 	target.LastError = ""
 	target.LastChecksum = checksum
 	target.NodeCount = len(nodes)
 	a.lastErr = ""
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return a.store.Save(a.data)
 }
 
@@ -267,7 +275,7 @@ func (a *App) RefreshPublicIP() (string, error) {
 	}
 	a.publicIP = ip
 	a.lastErr = ""
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return ip, nil
 }
 
@@ -312,7 +320,7 @@ func (a *App) Connect() error {
 	}
 
 	a.lastErr = ""
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return nil
 }
 
@@ -327,8 +335,17 @@ func (a *App) Disconnect() error {
 		return err
 	}
 	a.lastErr = ""
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	return nil
+}
+
+func (a *App) Shutdown(ctx context.Context) {
+	a.mu.Lock()
+	manager := a.manager
+	a.mu.Unlock()
+	if manager != nil {
+		_ = manager.Stop()
+	}
 }
 
 func (a *App) activeProfileNode() (model.Profile, model.Node, error) {

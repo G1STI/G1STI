@@ -7,7 +7,7 @@ declare global {
         GetStatus: () => Promise<{
           connected: boolean;
           active_profile: string;
-          updated_at: string;
+          updated_at_ms: number;
           last_error: string;
           public_ip: string;
         }>;
@@ -17,7 +17,7 @@ declare global {
             name: string;
             url: string;
             auto_update: string;
-            last_updated: string;
+            last_updated_ms: number;
             last_error: string;
             node_count: number;
           }>

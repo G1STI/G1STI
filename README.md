@@ -113,6 +113,7 @@ For MVP, place `sing-box.exe` and `wintun.dll` next to `G1STI.exe` (portable lay
 * Sing-box logs: `%AppData%\G1STI\logs\singbox.log`
 * If `wails dev` fails, confirm `npm install` succeeded and `wails` is in PATH.
 * If `npm run build` reports `Unexpected "\xff" in JSON`, there may be a UTF-16 `package.json` in a parent folder. Ensure you run the build inside `frontend/` and keep the repo root `package.json` in UTF-8 (this repo includes one).
+* If Wails installs from a GitHub URL (e.g. `github.com/wailsapp/wails@latest`) it will fetch v1. Use the Go module path: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`.
 
 ### Portable release layout
 ```

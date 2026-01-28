@@ -44,14 +44,14 @@ func (a *App) ImportProfile(payload string) (model.Profile, error) {
 	defer a.mu.Unlock()
 	profile := export.Profile
 	profile.ID = newID()
-	profile.CreatedAt = time.Now()
+	profile.CreatedAt = time.Now().UnixMilli()
 	profile.UpdatedAt = profile.CreatedAt
 	node := export.Node
 	node.ID = newID()
 	profile.NodeID = node.ID
 	a.data.Nodes = append(a.data.Nodes, node)
 	a.data.Profiles = append(a.data.Profiles, profile)
-	a.lastSeen = time.Now()
+	a.lastSeen = time.Now().UnixMilli()
 	if err := a.store.Save(a.data); err != nil {
 		return model.Profile{}, err
 	}

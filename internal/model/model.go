@@ -1,8 +1,6 @@
 package model
 
-import "time"
-
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 type AppData struct {
 	Version       int            `json:"version"`
@@ -14,14 +12,14 @@ type AppData struct {
 }
 
 type Subscription struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	URL          string    `json:"url"`
-	AutoUpdate   string    `json:"auto_update"`
-	LastUpdated  time.Time `json:"last_updated"`
-	LastError    string    `json:"last_error"`
-	NodeCount    int       `json:"node_count"`
-	LastChecksum string    `json:"last_checksum"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	URL          string `json:"url"`
+	AutoUpdate   string `json:"auto_update"`
+	LastUpdated  int64  `json:"last_updated_ms"`
+	LastError    string `json:"last_error"`
+	NodeCount    int    `json:"node_count"`
+	LastChecksum string `json:"last_checksum"`
 }
 
 type Node struct {
@@ -36,14 +34,14 @@ type Node struct {
 }
 
 type Profile struct {
-	ID             string    `json:"id"`
-	Name           string    `json:"name"`
-	SubscriptionID string    `json:"subscription_id"`
-	NodeID         string    `json:"node_id"`
-	TunEnabled     bool      `json:"tun_enabled"`
-	DNSMode        string    `json:"dns_mode"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	SubscriptionID string `json:"subscription_id"`
+	NodeID         string `json:"node_id"`
+	TunEnabled     bool   `json:"tun_enabled"`
+	DNSMode        string `json:"dns_mode"`
+	CreatedAt      int64  `json:"created_at_ms"`
+	UpdatedAt      int64  `json:"updated_at_ms"`
 }
 
 type Settings struct {
