@@ -61,6 +61,7 @@ wails build -platform windows/amd64
 ### 1) Install prerequisites
 * Go 1.22+
 * Node.js 18+ (npm included)
+* Microsoft Edge WebView2 Runtime (Evergreen)
 * Wails CLI:
   ```powershell
   go install github.com/wailsapp/wails/v2/cmd/wails@latest
@@ -114,6 +115,7 @@ For MVP, place `sing-box.exe` and `wintun.dll` next to `G1STI.exe` (portable lay
 * If `wails dev` fails, confirm `npm install` succeeded and `wails` is in PATH.
 * If `npm run build` reports `Unexpected "\xff" in JSON`, there may be a UTF-16 `package.json` in a parent folder. Ensure you run the build inside `frontend/` and keep the repo root `package.json` in UTF-8 (this repo includes one).
 * If Wails installs from a GitHub URL (e.g. `github.com/wailsapp/wails@latest`) it will fetch v1. Use the Go module path: `go install github.com/wailsapp/wails/v2/cmd/wails@latest`.
+* If the EXE opens then immediately closes, check `%AppData%\G1STI\logs\app.log` for startup errors (missing WebView2 runtime is a common cause).
 
 ### Portable release layout
 ```
