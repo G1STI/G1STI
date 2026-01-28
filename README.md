@@ -65,6 +65,10 @@ wails build -platform windows/amd64
   ```powershell
   go install github.com/wailsapp/wails/v2/cmd/wails@latest
   ```
+  The command is usually silent on success. Verify with:
+  ```powershell
+  wails version
+  ```
 
 ### 2) Clone and fetch dependencies
 ```powershell
@@ -108,6 +112,7 @@ For MVP, place `sing-box.exe` and `wintun.dll` next to `G1STI.exe` (portable lay
 * Backend logs: `%AppData%\G1STI\logs\app.log`
 * Sing-box logs: `%AppData%\G1STI\logs\singbox.log`
 * If `wails dev` fails, confirm `npm install` succeeded and `wails` is in PATH.
+* If `npm run build` reports `Unexpected "\xff" in JSON`, there may be a UTF-16 `package.json` in a parent folder. Ensure you run the build inside `frontend/` and keep the repo root `package.json` in UTF-8 (this repo includes one).
 
 ### Portable release layout
 ```
