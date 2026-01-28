@@ -15,7 +15,7 @@ Minimal Windows 10/11 desktop client for VLESS (and other subscription URIs) pow
 - [x] Step 1: Backend core (models, storage, sing-box process manager, config generator)
 - [x] Step 2: Subscriptions (download, decode, parse, normalize)
 - [ ] Step 3: UI (Home, Subscriptions, Profiles/Settings, About/Logs) + tray
-- [ ] Step 4: Integration tests (vless parsing, sing-box start/stop w/ mock)
+- [x] Step 4: Integration tests (vless parsing, sing-box start/stop w/ mock)
 - [ ] Step 5: Windows build instructions + portable release layout
 
 ## Layout
