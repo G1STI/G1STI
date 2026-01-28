@@ -24,6 +24,7 @@ Minimal Windows 10/11 desktop client for VLESS (and other subscription URIs) pow
 ├── frontend/                 # React + TS (Wails v2)
 ├── internal/
 │   ├── model/                # Data models
+│   ├── app/                  # Backend app services
 │   ├── parser/               # URI parsing helpers
 │   ├── paths/                # AppData paths
 │   ├── singbox/              # sing-box process + config generation
