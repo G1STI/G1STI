@@ -22,6 +22,7 @@ type Status struct {
 	ActiveProfile string    `json:"active_profile"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	LastError     string    `json:"last_error"`
+	PublicIP      string    `json:"public_ip"`
 }
 
 type App struct {
@@ -33,6 +34,7 @@ type App struct {
 	data     model.AppData
 	lastErr  string
 	lastSeen time.Time
+	publicIP string
 }
 
 func New() *App {
@@ -89,6 +91,7 @@ func (a *App) GetStatus() Status {
 		ActiveProfile: a.data.ActiveProfile,
 		UpdatedAt:     a.lastSeen,
 		LastError:     a.lastErr,
+		PublicIP:      a.publicIP,
 	}
 }
 
@@ -118,6 +121,85 @@ func (a *App) ListNodes(subscriptionID string) []model.Node {
 		}
 	}
 	return result
+}
+
+func (a *App) AddSubscription(name string, url string, autoUpdate string) (model.Subscription, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	subscription := model.Subscription{
+		ID:         newID(),
+		Name:       name,
+		URL:        url,
+		AutoUpdate: autoUpdate,
+	}
+	a.data.Subscriptions = append(a.data.Subscriptions, subscription)
+	a.lastSeen = time.Now()
+	return subscription, a.store.Save(a.data)
+}
+
+func (a *App) RemoveSubscription(subscriptionID string) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	filtered := a.data.Subscriptions[:0]
+	for _, subscription := range a.data.Subscriptions {
+		if subscription.ID != subscriptionID {
+			filtered = append(filtered, subscription)
+		}
+	}
+	a.data.Subscriptions = filtered
+
+	nodes := a.data.Nodes[:0]
+	for _, node := range a.data.Nodes {
+		if node.SubscriptionID != subscriptionID {
+			nodes = append(nodes, node)
+		}
+	}
+	a.data.Nodes = nodes
+	a.lastSeen = time.Now()
+	return a.store.Save(a.data)
+}
+
+func (a *App) CreateProfile(profile model.Profile) (model.Profile, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	profile.ID = newID()
+	profile.CreatedAt = time.Now()
+	profile.UpdatedAt = profile.CreatedAt
+	a.data.Profiles = append(a.data.Profiles, profile)
+	a.lastSeen = time.Now()
+	return profile, a.store.Save(a.data)
+}
+
+func (a *App) UpdateProfile(profile model.Profile) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i, item := range a.data.Profiles {
+		if item.ID == profile.ID {
+			profile.CreatedAt = item.CreatedAt
+			profile.UpdatedAt = time.Now()
+			a.data.Profiles[i] = profile
+			a.lastSeen = time.Now()
+			return a.store.Save(a.data)
+		}
+	}
+	return ErrProfileNotFound
+}
+
+func (a *App) DeleteProfile(profileID string) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	filtered := a.data.Profiles[:0]
+	for _, profile := range a.data.Profiles {
+		if profile.ID != profileID {
+			filtered = append(filtered, profile)
+		}
+	}
+	a.data.Profiles = filtered
+	if a.data.ActiveProfile == profileID {
+		a.data.ActiveProfile = ""
+	}
+	a.lastSeen = time.Now()
+	return a.store.Save(a.data)
 }
 
 func (a *App) SetActiveProfile(profileID string) error {
@@ -173,6 +255,20 @@ func (a *App) UpdateSubscription(subscriptionID string) error {
 	a.lastErr = ""
 	a.lastSeen = time.Now()
 	return a.store.Save(a.data)
+}
+
+func (a *App) RefreshPublicIP() (string, error) {
+	ip, err := fetchPublicIP(a.ctx)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if err != nil {
+		a.lastErr = err.Error()
+		return "", err
+	}
+	a.publicIP = ip
+	a.lastErr = ""
+	a.lastSeen = time.Now()
+	return ip, nil
 }
 
 func (a *App) Connect() error {
