@@ -13,7 +13,7 @@ Minimal Windows 10/11 desktop client for VLESS (and other subscription URIs) pow
 ## Checklist (plan of work)
 - [x] Step 0: Repository structure + README checklist
 - [x] Step 1: Backend core (models, storage, sing-box process manager, config generator)
-- [ ] Step 2: Subscriptions (download, decode, parse, normalize)
+- [x] Step 2: Subscriptions (download, decode, parse, normalize)
 - [ ] Step 3: UI (Home, Subscriptions, Profiles/Settings, About/Logs) + tray
 - [ ] Step 4: Integration tests (vless parsing, sing-box start/stop w/ mock)
 - [ ] Step 5: Windows build instructions + portable release layout
@@ -24,9 +24,11 @@ Minimal Windows 10/11 desktop client for VLESS (and other subscription URIs) pow
 ├── frontend/                 # React + TS (Wails v2)
 ├── internal/
 │   ├── model/                # Data models
+│   ├── parser/               # URI parsing helpers
 │   ├── paths/                # AppData paths
 │   ├── singbox/              # sing-box process + config generation
 │   └── storage/              # JSON storage + schema migrations
+│   └── subscription/         # Subscription download + normalize
 ├── go.mod
 └── README.md
 ```
