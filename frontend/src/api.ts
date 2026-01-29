@@ -54,7 +54,7 @@ type Backend = {
 };
 
 const backend: Backend | undefined =
-  window.go?.main?.App ?? window.backend?.App;
+  window.go?.app?.App ?? window.go?.main?.App ?? window.backend?.App;
 
 export const api = {
   getStatus: async (): Promise<Status | null> => {
