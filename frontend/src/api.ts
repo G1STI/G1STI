@@ -50,6 +50,7 @@ type Backend = {
   Connect?: () => Promise<void>;
   Disconnect?: () => Promise<void>;
   RefreshPublicIP?: () => Promise<string>;
+  GetAppLogTail?: (lines: number) => Promise<string>;
 };
 
 const backend: Backend | undefined =
@@ -117,5 +118,11 @@ export const api = {
       throw new Error("Backend bindings not available");
     }
     return backend.RefreshPublicIP();
+  },
+  getAppLogTail: async (lines = 200): Promise<string> => {
+    if (!backend?.GetAppLogTail) {
+      throw new Error("Backend bindings not available");
+    }
+    return backend.GetAppLogTail(lines);
   },
 };

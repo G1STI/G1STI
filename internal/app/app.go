@@ -409,6 +409,14 @@ func (a *App) Shutdown(ctx context.Context) {
 	}
 }
 
+func (a *App) GetAppLogTail(lines int) (string, error) {
+	path, err := paths.AppLogPath()
+	if err != nil {
+		return "", err
+	}
+	return readLogTail(path, lines)
+}
+
 func (a *App) activeProfileNode() (model.Profile, model.Node, error) {
 	if a.data.ActiveProfile == "" {
 		return model.Profile{}, model.Node{}, ErrProfileNotFound

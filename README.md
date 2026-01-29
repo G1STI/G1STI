@@ -137,3 +137,6 @@ Keep `sing-box.exe` and `wintun.dll` next to the app executable for the MVP. Con
 
 ## License
 MIT (see `LICENSE`).
+
+## Debugging
+See `DEBUGGING.md` for a quick troubleshooting toolkit and a bug‑report template.

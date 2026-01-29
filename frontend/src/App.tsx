@@ -20,6 +20,8 @@ const App = () => {
   const [subscriptionError, setSubscriptionError] = useState("");
   const [vlessError, setVlessError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [logTail, setLogTail] = useState("");
+  const [logError, setLogError] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -179,6 +181,18 @@ const App = () => {
       setVlessError(message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const onRefreshLogs = async () => {
+    setLogError("");
+    try {
+      const tail = await api.getAppLogTail(200);
+      setLogTail(tail || "No logs yet.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load logs.";
+      setLogError(message);
     }
   };
 
@@ -411,8 +425,14 @@ const App = () => {
       {activeTab === "Logs" && (
         <section className="app__card">
           <h2>Logs</h2>
+          <div className="toolbar">
+            <button onClick={onRefreshLogs} disabled={busy}>
+              Refresh
+            </button>
+          </div>
+          {logError && <div className="status__error">{logError}</div>}
           <div className="log">
-            <p className="muted">Logs will appear here after connection.</p>
+            <pre>{logTail || "Logs will appear here after refresh."}</pre>
           </div>
         </section>
       )}

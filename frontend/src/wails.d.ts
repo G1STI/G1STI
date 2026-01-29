@@ -69,6 +69,7 @@ declare global {
           Connect: () => Promise<void>;
           Disconnect: () => Promise<void>;
           RefreshPublicIP: () => Promise<string>;
+          GetAppLogTail: (lines: number) => Promise<string>;
         };
       };
     };
