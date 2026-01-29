@@ -1,0 +1,175 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #f4f4f4;
+  background: #0f1115;
+}
+
+body {
+  margin: 0;
+  background: #0f1115;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+select {
+  background: #0f1115;
+  color: #f4f4f4;
+  border: 1px solid #2a3244;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.app {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 0 24px 48px;
+}
+
+.app__header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app__tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: #1a1f2b;
+  color: #cbd5f5;
+  border: 1px solid #2a3244;
+  border-radius: 999px;
+  padding: 6px 16px;
+  cursor: pointer;
+}
+
+.tab--active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.app__card {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #1a1f2b;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.status__label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.status__value {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.status__value--idle {
+  color: #f97316;
+}
+
+.status__value--ok {
+  color: #22c55e;
+}
+
+.status__error {
+  margin-top: 8px;
+  color: #f87171;
+}
+
+.status__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.status__row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status__ip {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.primary {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.toolbar input {
+  flex: 1;
+  min-width: 200px;
+  background: #0f1115;
+  border: 1px solid #2a3244;
+  color: #f4f4f4;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.table {
+  display: grid;
+  gap: 8px;
+}
+
+.table__header {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 0.5fr;
+  gap: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.table__row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 0.5fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #2a3244;
+}
+
+.log {
+  background: #0f1115;
+  border-radius: 10px;
+  padding: 16px;
+  min-height: 160px;
+}
+
+.muted {
+  color: #94a3b8;
+}
