@@ -102,22 +102,28 @@ const App = () => {
       return;
     }
     setBusy(true);
-    const created = await api.addSubscription(
-      subName.trim(),
-      subUrl.trim(),
-      subAutoUpdate
-    );
-    if (!created) {
-      setSubscriptionError("Failed to add subscription.");
+    try {
+      const created = await api.addSubscription(
+        subName.trim(),
+        subUrl.trim(),
+        subAutoUpdate
+      );
+      if (!created) {
+        setSubscriptionError("Failed to add subscription.");
+        return;
+      }
+      setSubName("");
+      setSubUrl("");
+      const updated = await api.listSubscriptions();
+      setSubscriptions(updated);
+      setSelectedSubscription(created.id);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to add subscription.";
+      setSubscriptionError(message);
+    } finally {
       setBusy(false);
-      return;
     }
-    setSubName("");
-    setSubUrl("");
-    const updated = await api.listSubscriptions();
-    setSubscriptions(updated);
-    setSelectedSubscription(created.id);
-    setBusy(false);
   };
 
   const onUpdateSubscription = async () => {
@@ -126,12 +132,19 @@ const App = () => {
       return;
     }
     setBusy(true);
-    await api.updateSubscription(selectedSubscription);
-    const list = await api.listNodes(selectedSubscription);
-    setNodes(list);
-    const updated = await api.listSubscriptions();
-    setSubscriptions(updated);
-    setBusy(false);
+    try {
+      await api.updateSubscription(selectedSubscription);
+      const list = await api.listNodes(selectedSubscription);
+      setNodes(list);
+      const updated = await api.listSubscriptions();
+      setSubscriptions(updated);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update subscription.";
+      setSubscriptionError(message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const onAddVless = async () => {
@@ -141,26 +154,32 @@ const App = () => {
       return;
     }
     setBusy(true);
-    const profile = await api.addVlessUri(vlessTag.trim(), vlessUri.trim());
-    if (!profile) {
-      setVlessError("Failed to add VLESS link.");
+    try {
+      const profile = await api.addVlessUri(vlessTag.trim(), vlessUri.trim());
+      if (!profile) {
+        setVlessError("Failed to add VLESS link.");
+        return;
+      }
+      setVlessTag("");
+      setVlessUri("");
+      const [subs, profs] = await Promise.all([
+        api.listSubscriptions(),
+        api.listProfiles(),
+      ]);
+      setSubscriptions(subs);
+      setProfiles(profs);
+      setSelectedSubscription(profile.subscription_id);
+      const list = await api.listNodes(profile.subscription_id);
+      setNodes(list);
+      const nextStatus = await api.getStatus();
+      if (nextStatus) setStatus(nextStatus);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to add VLESS link.";
+      setVlessError(message);
+    } finally {
       setBusy(false);
-      return;
     }
-    setVlessTag("");
-    setVlessUri("");
-    const [subs, profs] = await Promise.all([
-      api.listSubscriptions(),
-      api.listProfiles(),
-    ]);
-    setSubscriptions(subs);
-    setProfiles(profs);
-    setSelectedSubscription(profile.subscription_id);
-    const list = await api.listNodes(profile.subscription_id);
-    setNodes(list);
-    const nextStatus = await api.getStatus();
-    if (nextStatus) setStatus(nextStatus);
-    setBusy(false);
   };
 
   return (
@@ -298,9 +317,9 @@ const App = () => {
                 value={vlessTag}
                 onChange={(event) => setVlessTag(event.target.value)}
               />
-              <input
-                type="text"
+              <textarea
                 placeholder="Paste VLESS URI"
+                rows={3}
                 value={vlessUri}
                 onChange={(event) => setVlessUri(event.target.value)}
               />

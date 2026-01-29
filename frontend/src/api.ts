@@ -77,31 +77,45 @@ export const api = {
     url: string,
     autoUpdate: string
   ): Promise<Subscription | null> => {
-    if (!backend?.AddSubscription) return null;
+    if (!backend?.AddSubscription) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.AddSubscription(name, url, autoUpdate);
   },
   updateSubscription: async (subscriptionId: string): Promise<void> => {
-    if (!backend?.UpdateSubscription) return;
+    if (!backend?.UpdateSubscription) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.UpdateSubscription(subscriptionId);
   },
   setActiveProfile: async (profileId: string): Promise<void> => {
-    if (!backend?.SetActiveProfile) return;
+    if (!backend?.SetActiveProfile) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.SetActiveProfile(profileId);
   },
   addVlessUri: async (tag: string, uri: string): Promise<Profile | null> => {
-    if (!backend?.AddVlessURI) return null;
+    if (!backend?.AddVlessURI) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.AddVlessURI(tag, uri);
   },
   connect: async (): Promise<void> => {
-    if (!backend?.Connect) return;
+    if (!backend?.Connect) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.Connect();
   },
   disconnect: async (): Promise<void> => {
-    if (!backend?.Disconnect) return;
+    if (!backend?.Disconnect) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.Disconnect();
   },
   refreshPublicIP: async (): Promise<string> => {
-    if (!backend?.RefreshPublicIP) return "";
+    if (!backend?.RefreshPublicIP) {
+      throw new Error("Backend bindings not available");
+    }
     return backend.RefreshPublicIP();
   },
 };
