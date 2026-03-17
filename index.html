@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corvax SS14 Helper — Варден / АВД-ПНТ</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Corvax SS14 Helper</h1>
+    <p>Инструменты для службы безопасности и АВД/ПНТ (только материалы Corvax).</p>
+  </header>
+
+  <nav class="tabs" aria-label="Разделы">
+    <button class="tab-btn active" data-tab="warden">Варден / СБ</button>
+    <button class="tab-btn" data-tab="iav">АВД / ПНТ</button>
+  </nav>
+
+  <main>
+    <section id="warden" class="tab-panel active">
+      <h2>Помощник вардена и СБ</h2>
+      <p class="source">Основано на: Корпоративный закон Corvax.</p>
+
+      <div class="card">
+        <h3>Подбор наказания по нарушению</h3>
+        <div class="grid">
+          <label>Статья / нарушение
+            <select id="lawSelect"></select>
+          </label>
+          <label>Отягчающие обстоятельства
+            <select id="aggravation">
+              <option value="none">Нет</option>
+              <option value="minor">Есть (частичные)</option>
+              <option value="major">Серьёзные / повторные</option>
+            </select>
+          </label>
+          <label>Смягчающие обстоятельства
+            <select id="mitigation">
+              <option value="none">Нет</option>
+              <option value="minor">Сотрудничество / раскаяние</option>
+              <option value="major">Критично смягчающие</option>
+            </select>
+          </label>
+        </div>
+        <button id="calcPunishment">Выдать рекомендацию</button>
+        <div id="punishmentResult" class="result"></div>
+      </div>
+
+      <div class="card">
+        <h3>Советы для вардена (QoL)</h3>
+        <ul id="wardenTips"></ul>
+      </div>
+    </section>
+
+    <section id="iav" class="tab-panel">
+      <h2>Инструмент АВД / ПНТ</h2>
+      <p class="source">Основано на: АВД, СРП Corvax (включая отделы и должности), бумажная работа Corvax.</p>
+
+      <div class="ticker" aria-live="polite">
+        <div class="ticker-track">Внимание АВД/ПНТ: фиксируйте нарушения СРП только на основании подтверждённых фактов • Указывайте отдел, должность, время, свидетелей и доказательства • Оформляйте документы строго по установленной форме</div>
+      </div>
+
+      <div class="card">
+        <h3>Аудит СРП и отчёт в ЦК</h3>
+        <div class="grid">
+          <label>Отдел
+            <select id="deptSelect"></select>
+          </label>
+          <label>Должность
+            <select id="roleSelect"></select>
+          </label>
+          <label>Выявленные нарушения СРП
+            <select id="srpViolation"></select>
+          </label>
+          <label>Серьёзность
+            <select id="severity">
+              <option>Низкая</option>
+              <option>Средняя</option>
+              <option>Высокая</option>
+              <option>Критическая</option>
+            </select>
+          </label>
+        </div>
+        <label>Факты / доказательства
+          <textarea id="facts" rows="4" placeholder="Что произошло, кто был вовлечён, на что ссылаемся..."></textarea>
+        </label>
+        <button id="buildCkReport">Сформировать отчёт для ЦК</button>
+        <pre id="ckReport" class="result"></pre>
+      </div>
+
+      <div class="card">
+        <h3>Режим расследования (удобная реализация)</h3>
+        <div class="grid">
+          <label>Номер дела
+            <input id="caseId" placeholder="CASE-###" />
+          </label>
+          <label>Объект расследования
+            <input id="subject" placeholder="ФИО / должность / отдел" />
+          </label>
+        </div>
+        <label>Хронология (по строке = событие)
+          <textarea id="timeline" rows="5" placeholder="12:03 — сообщение о нарушении&#10;12:06 — первичный допрос..."></textarea>
+        </label>
+        <label>Перечень улик (по строке)
+          <textarea id="evidence" rows="4" placeholder="Запись камер №2&#10;Показания свидетеля..."></textarea>
+        </label>
+        <button id="buildInvestigation">Собрать сводку расследования</button>
+        <pre id="investigationOut" class="result"></pre>
+      </div>
+
+      <div class="card">
+        <h3>Бюрократия Corvax — строгая форма документа</h3>
+        <p>Генератор запрещает «свободный стиль» и выдаёт документ с обязательными реквизитами формы.</p>
+        <div class="grid">
+          <label>Тип документа
+            <select id="paperType">
+              <option value="service-note">Служебная записка</option>
+              <option value="incident-report">Рапорт о происшествии</option>
+              <option value="ck-request">Запрос в ЦК</option>
+              <option value="explanatory">Объяснительная</option>
+            </select>
+          </label>
+          <label>Кому
+            <input id="paperTo" placeholder="Должность / отдел" />
+          </label>
+          <label>От кого
+            <input id="paperFrom" placeholder="Должность, ФИО" />
+          </label>
+          <label>Дата / смена
+            <input id="paperDate" placeholder="ДД.ММ.20XX / Смена #" />
+          </label>
+        </div>
+        <label>Тема
+          <input id="paperSubject" placeholder="Краткая тема документа" />
+        </label>
+        <label>Основание (статья/СРП/приказ)
+          <input id="paperBasis" placeholder="Например: СРП, раздел ..." />
+        </label>
+        <label>Содержание (только факты)
+          <textarea id="paperBody" rows="5" placeholder="Изложите фактическую часть."></textarea>
+        </label>
+        <label>Приложения / доказательства
+          <textarea id="paperAttachments" rows="3" placeholder="Камеры, свидетельства, номер дела..."></textarea>
+        </label>
+        <div class="paper-actions">
+          <button id="generatePaperwork">Сформировать документ по форме</button>
+          <button id="validatePaperwork">Проверить заполнение формы</button>
+        </div>
+        <div id="paperValidation" class="validation"></div>
+        <pre id="paperworkOut" class="result"></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Внимание: инструмент выдаёт рекомендации. Финальное решение — за действующим составом командования и правилами Corvax.</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
